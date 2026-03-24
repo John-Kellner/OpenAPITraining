@@ -1,0 +1,635 @@
+
+"openapi": "3.1.0"
+"info": {
+  "title": "Public REST API – Tec Ref",
+  "description": " \u003Cp\u003E Diese Dokumentation beschreibt die technische Referenz der \u003Cstrong\u003EPublic REST API\u003C/strong\u003E von Kasaia auf Basis des OpenAPI-Standards (OAS 3.1). Sie richtet sich an Entwicklerinnen und Entwickler sowie Integratoren, die die API konkret implementieren und die bereitgestellten Endpunkte, Parameter und Datenstrukturen im Detail nachvollziehen möchten. \u003C/p\u003E \u003Cp\u003E Die Public REST API ermöglicht den lesenden Zugriff auf fachlich freigegebene Ergebnis-Artefakte aus Kasaia. Über die API können Stellen identifiziert werden, für die eine Endfassung vorliegt, und die zugehörigen Inhalte strukturiert abgerufen werden, um sie automatisiert in Drittsysteme zu übernehmen. Ausgeliefert wird jeweils die zum Abrufzeitpunkt in Kasaia als Endfassung gekennzeichnete Version einer Stelle. Stellen ohne Endfassung sind über die API nicht zugreifbar. \u003C/p\u003E \u003Cp\u003E Die Authentifizierung gegenüber der API erfolgt über einen API-Key, der bei jedem Request im HTTP-Header zu übermitteln ist. Der API-Key identifiziert den Mandanten und steuert den Zugriff auf die Schnittstelle. Details zur Erstellung und Verwaltung von API-Keys sowie zu Authentifizierungs- und Autorisierungskonzepten sind nicht Bestandteil dieser Referenzdokumentation und werden in einem separaten Dokument beschrieben (siehe &rdquo;API-Schlüssel erstellen und verwalten&ldquo;). \u003C/p\u003E \u003Cp\u003E \u003Ch2\u003EHinweis zur interaktiven Nutzung (&rdquo;Try it out&ldquo;)\u003C/h2\u003E Die interaktive Swagger-Dokumentation auf dieser Seite kann auch direkt in Verbindung mit Ihrem eigenen Kasaia-Mandanten genutzt werden. Hierzu ist ein API-Key erforderlich, den Sie wie im oben genannten Dokument beschrieben einrichten (lassen) können. Über den &rdquo;Authorize!&ldquo;-Button können Sie Ihren API-Key hinterlegen und die API innerhalb dieser Browser-Sitzung direkt gegen Ihren Mandanten testen. \u003C/p\u003E \u003Cp\u003E \u003Ch2\u003EHinweis zur Basis-URL bei Aufruf der beschriebenen Endpunkte in eigenem Code\u003C/h2\u003E Die Basis-URL der hier beschriebenen  \u003C/p\u003E \u003Cp\u003E \u003Ch2\u003EHinweis auf ergänzende Dokumentation\u003C/h2\u003E Diese Swagger-Dokumentation dient als technische Detail- und Referenzdokumentation der Public REST API. Eine einordnende Beschreibung von Kasaia, dem fachlichen Kontext der Anwendung, typischen Einsatzszenarien der Public REST API sowie den allgemeinen technischen und organisatorischen Rahmenbedingungen finden Sie in der Online-Dokumentation unter dem Einstiegspunkt \u003Ca href='https://picture.atlassian.net/wiki/spaces/KPA/overview' target='_blank'\u003Ehttps://picture.atlassian.net/wiki/spaces/KPA/overview\u003C/a\u003E. \u003C/p\u003E",
+  "version": "1.0.0"
+}
+"tags": [
+  {
+    "name": "PDF herunterladen",
+    "description": "Erzeugt ein PDF-Dokument für die Endfassung der angegebenen Stelle."
+  }
+]
+"paths": {
+  "/rest/api/v1/stelle/{stellen_ID}/endfassung": {
+    "get": {
+      "tags": [
+        "Stellen laden"
+      ],
+      "summary": "Eine Stelle laden",
+      "description": "Es werden die Inhalte der als Endfassung markierten Dokumentversion der Stelle geliefert -\u003E im Zeitverlauf kann sich die Version ändern.\n- Eine Stelle ist eindeutig über ihre **Stellen_ID** identifizierbar.\n\nHinweis\n- Über diesen Endpunkt können nur Endfassungen gelesen werden – Entwürfe und frühere Endfassungen sind nicht zugänglich.\n",
+      "operationId": "Endfassung_laden",
+      "parameters": [
+        {
+          "name": "stellen_ID",
+          "in": "path",
+          "description": "Die Stellen-ID gibt an, welche Stelle abgerufen werden soll.\n\nStellen, für die eine Endfassung festgelegt wurde, können im Endpunkt [Liste von Stellen laden](#/Stellen%20laden/Stellen_laden) abgerufen werden.\n",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "example": "650c4745926eca44ed15da59"
+        }
+      ],
+      "responses": {
+        "401": {
+          "description": "Unauthorized - API-Key fehlt/ungültig"
+        },
+        "403": {
+          "description": "Forbidden - API-Key gültig, aber Berechtigung für die Operation fehlt."
+        },
+        "404": {
+          "description": "Not Found - Ressource nicht vorhanden (oder aus Privacy-Gründen verborgen)."
+        },
+        "422": {
+          "description": "Unprocessable Entity - Fachliche Validierung fehlgeschlagen."
+        },
+        "429": {
+          "description": "Too Many Requests - Es wurden zu viele Anfragen an die API gesendet. Das Rate-Limit beträgt 60 Anfragen pro Minute und es ist immer nur eine aktive Anfrage erlaubt."
+        },
+        "200": {
+          "description": "Erfolgreich geladen.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/API_Endfassung_DTO"
+              }
+            }
+          }
+        }
+      },
+      "security": [
+        {
+          "X-Api-Key": []
+        }
+      ]
+    }
+  },
+  "/rest/api/v1/stellen/endfassung": {
+    "get": {
+      "tags": [
+        "Stellen laden"
+      ],
+      "summary": "Liste von Stellen laden",
+      "description": "Dieser Endpunkt liefert eine Liste von Stellen.\nEs werden alle Stellen berücksichtigt, für die seit dem abgefragten Zeitpunkt (festgelegt_seit) eine Endfassung festgelegt wurden.\n- Diese Liste soll die Stellen liefern, für die eine Aktualisierung notwendig ist, und dient als Input für weitere Endpunkte.\n    - Über den Endpunkt [Eine Stelle laden](#/Stellen%20laden/Endfassung_laden) können weitere Daten einer Stelle (**Stellen_ID**) abgefragt werden.\n    - Über den Endpunkt [PDF erzeugen und herunterladen](#/PDF%20herunterladen/PDF_herunterladen) kann für die Stelle ein PDF erzeugt werden.\n- Eine Stelle ist eindeutig über ihre **Stellen_ID** identifizierbar.\n\nHinweis\n- Dieser Endpunkt dient nicht dazu, Inhalte von Stellen abzufragen. Hierfür ist der Endpunkt [Eine Stelle laden](#/Stellen%20laden/Endfassung_laden) vorgesehen.\n",
+      "operationId": "Stellen_laden",
+      "parameters": [
+        {
+          "name": "festgelegt_seit",
+          "in": "query",
+          "description": "Es werden nur Stellen ausgeliefert, für die nach dem abgefragten Zeitpunkt, eine Endfassung festgelegt wurde.\\\nFormatierung in ISO-8601-Format (UTC) - **yyyy-MM-dd'T'HH:mm:ss.SSSX**\n\nStellen für die eine Endfassung vor diesem Zeitpunkt festgelegt wurde, werden hier nicht berücksichtigt.\n",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "example": "2025-07-06T08:12:45.321Z"
+        }
+      ],
+      "responses": {
+        "401": {
+          "description": "Unauthorized - API-Key fehlt/ungültig"
+        },
+        "403": {
+          "description": "Forbidden - API-Key gültig, aber Berechtigung für die Operation fehlt."
+        },
+        "404": {
+          "description": "Not Found - Ressource nicht vorhanden (oder aus Privacy-Gründen verborgen)."
+        },
+        "422": {
+          "description": "Unprocessable Entity - Fachliche Validierung fehlgeschlagen."
+        },
+        "429": {
+          "description": "Too Many Requests - Es wurden zu viele Anfragen an die API gesendet. Das Rate-Limit beträgt 60 Anfragen pro Minute und es ist immer nur eine aktive Anfrage erlaubt."
+        },
+        "200": {
+          "description": "Erfolgreich geladen.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/API_Stelle_DTO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "security": [
+        {
+          "X-Api-Key": []
+        }
+      ]
+    }
+  },
+  "/rest/api/v1/exportprofile": {
+    "get": {
+      "tags": [
+        "PDF herunterladen"
+      ],
+      "summary": "Exportprofile laden",
+      "description": "Dieser Endpunkt liefert alle aktiven Exportprofile.\n- Ein **Exportprofil** legt fest, in welcher Form eine Stelle in ein PDF exportiert wird.\nEs definiert z. B. Layout, Umfang oder welche Felder enthalten sind\n([Bedienleitfaden-Exportprofile](handbuch/HTML/exportprofile-konfigurieren.html)).\n- Über den Endpunkt [PDF erzeugen und herunterladen](#/PDF%20herunterladen/PDF_herunterladen) kann mit dem Exportprofil ein PDF erzeugt werden.\n- Jedes Exportprofil ist eindeutig über eine **Exportprofil_ID** identifizierbar.\n\n➡️ Für externe Systeme heißt das: Entwickler wählen ein Exportprofil, um gewünschte Stelleninformationen automatisch als PDF abzurufen.\n\nHinweis\n- Dieser Endpunkt dient nicht dazu, Daten einer Stelle abzufragen.\n- Die Einstellungen von Exportprofilen können nicht abgefragt werden.\n",
+      "operationId": "Exportprofile_laden",
+      "responses": {
+        "401": {
+          "description": "Unauthorized - API-Key fehlt/ungültig"
+        },
+        "403": {
+          "description": "Forbidden - API-Key gültig, aber Berechtigung für die Operation fehlt."
+        },
+        "404": {
+          "description": "Not Found - Ressource nicht vorhanden (oder aus Privacy-Gründen verborgen)."
+        },
+        "422": {
+          "description": "Unprocessable Entity - Fachliche Validierung fehlgeschlagen."
+        },
+        "429": {
+          "description": "Too Many Requests - Es wurden zu viele Anfragen an die API gesendet. Das Rate-Limit beträgt 60 Anfragen pro Minute und es ist immer nur eine aktive Anfrage erlaubt."
+        },
+        "200": {
+          "description": "Erfolgreich geladen.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/API_Exportprofil_DTO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "security": [
+        {
+          "X-Api-Key": []
+        }
+      ]
+    }
+  },
+  "/rest/api/v1/pdf/stelle/{stellen_ID}/exportprofil/{exportprofil_ID}": {
+    "get": {
+      "tags": [
+        "PDF herunterladen"
+      ],
+      "summary": "PDF erzeugen und herunterladen",
+      "description": "Dieser Endpunkt stellt die Inhalte der als Endfassung markierten Dokumentversion der Stelle zum Herunterladen als PDF bereit -\u003E im Zeitverlauf kann sich die Version ändern.\\\nDas PDF wird mit dem übergebenen Exportprofil (**exportprofil_ID**) für die übergebene Stelle (**stellen_ID**) erzeugt.\n- Ein **Exportprofil** legt fest, in welcher Form eine Stelle in ein PDF exportiert wird.\nEs definiert z. B. Layout, Umfang oder welche Felder enthalten sind\n([Bedienleitfaden-Exportprofile](handbuch/HTML/exportprofile-konfigurieren.html)).\n- Über den Endpunkt [Exportprofile laden](#/PDF%20herunterladen/Exportprofile_laden) kann eine Liste der verfügbaren Exportprofile (**Exportprofil_ID**) geladen werden.\n- Über den Endpunkt [Liste von Stellen laden](#/Stellen%20laden/Stellen_laden) kann eine Liste von Stellen (**Stellen_ID**) geladen werden, für die eine Endfassung festgelegt wurde.\n\nHinweis\n- Dieser Endpunkt dient nicht dazu, Inhalte von Stellen abzufragen. Hierfür ist der Endpunkt [Eine Stelle laden](#/Stellen%20laden/Endfassung_laden) vorgesehen.\n- Für Entwürfe können keine PDFs erzeugt und heruntergeladen werden.\n",
+      "operationId": "PDF_herunterladen",
+      "parameters": [
+        {
+          "name": "exportprofil_ID",
+          "in": "path",
+          "description": "Die Exportprofil-ID gibt an, welches Exportprofil für das Erstellen der PDF verwendet werden soll.\n\nAlle möglichen Exportprofil_IDs können im REST-Endpunkt [Exportprofile laden](#/PDF%20herunterladen/Exportprofile_laden) abgerufen werden.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "example": "650c4745926eca44ed15dadb"
+        },
+        {
+          "name": "stellen_ID",
+          "in": "path",
+          "description": "Die Stellen-ID gibt an, für welche Stelle ein PDF erzeugt werden soll.\n\nAlle möglichen Stellen_IDs können im REST-Endpunkt [Liste von Stellen laden](#/Stellen%20laden/Stellen_laden) abgerufen werden.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "example": "650c4745926eca44ed15da59"
+        }
+      ],
+      "responses": {
+        "401": {
+          "description": "Unauthorized - API-Key fehlt/ungültig"
+        },
+        "403": {
+          "description": "Forbidden - API-Key gültig, aber Berechtigung für die Operation fehlt."
+        },
+        "404": {
+          "description": "Not Found - Ressource nicht vorhanden (oder aus Privacy-Gründen verborgen)."
+        },
+        "422": {
+          "description": "Unprocessable Entity - Fachliche Validierung fehlgeschlagen."
+        },
+        "429": {
+          "description": "Too Many Requests - Es wurden zu viele Anfragen an die API gesendet. Das Rate-Limit beträgt 60 Anfragen pro Minute und es ist immer nur eine aktive Anfrage erlaubt."
+        },
+        "200": {
+          "description": "PDF wurde erfolgreich erstellt.",
+          "content": {
+            "application/pdf": {
+
+            }
+          }
+        }
+      },
+      "security": [
+        {
+          "X-Api-Key": []
+        }
+      ]
+    }
+  }
+}
+"components": {
+  "schemas": {
+    "API_Dienstpostenbewertung_DTO": {
+      "type": "object",
+      "properties": {
+        "Besoldungsgruppe": {
+          "type": "string",
+          "description": "Das Ergebnis der Dienstpostenbewertung.",
+          "enum": [
+            "B3",
+            "B2",
+            "B2_B3",
+            "A16",
+            "A15",
+            "A14",
+            "A13_Z",
+            "A13",
+            "A12",
+            "A11",
+            "A10",
+            "A9_Z",
+            "A9",
+            "A8",
+            "A7",
+            "A6",
+            "A5",
+            "A4",
+            "A3",
+            "A2",
+            "A1"
+          ],
+          "example": "A 5"
+        },
+        "Besoldungsgruppe_Laufbahnzusatz": {
+          "type": "string",
+          "description": "Der Laufbahnzusatz für das Ergebnis der Dienstpostenbewertung. Dies betrifft nur die Besoldungsgruppen A 5, A 9, A 9+Z, A 13 und A 13+Z",
+          "example": "e.D."
+        },
+        "Gesamtwertzahl": {
+          "type": "string",
+          "description": "Die erreichte Gesamtwertzahl der Dienstpostenbewertung (Wert zwischen 0 und 1000).",
+          "example": "164"
+        },
+        "Gültig_ab": {
+          "type": "string",
+          "description": "Das Datum, ab wann die Dienstpostenbewertung gültig ist. Gültig ab ist ein optionales Feld ohne feste Formatierung",
+          "example": "01.10.2025 oder Januar"
+        }
+      }
+    },
+    "API_Endfassung_DTO": {
+      "type": "object",
+      "properties": {
+        "Stellen_ID": {
+          "type": "string",
+          "description": "Eindeutige UUID. Diese ID wird verwendet, um eine Stelle eindeutig zu identifizieren. Diese ID wird z.B. benötigt, um ein PDF über die öffentliche Schnittstelle erzeugen zu können.",
+          "example": "650c4745926eca44ed15da59"
+        },
+        "Stellennummer": {
+          "type": "string",
+          "description": "Die Stellennummer der Stelle.",
+          "example": "10-01-AL"
+        },
+        "Bezeichnung": {
+          "type": "string",
+          "description": "Die Bezeichnung der Stelle.",
+          "example": "AL Hauptamtsleitung"
+        },
+        "Hauptaufgaben": {
+          "type": "string",
+          "description": "Die Hauptaufgaben der Stelle als HTML-String.",
+          "example": "Aufgabengebiet in kleiner - mittlerer Kommune\u003Cul\u003E\u003Cli\u003ELeitung der Gesamtverwaltung\u003C/li\u003E\u003Cli\u003Egrundsätzliche Rechtsfragen\u003C/li\u003E\u003Cli\u003EPersonalthemen\u003C/li\u003E\u003Cli\u003EVertragswesen\u003C/li\u003E\u003Cli\u003ESitzungen\u003C/li\u003E\u003C/ul\u003E"
+        },
+        "Organisationseinheit": {
+          "type": "string",
+          "description": "Die Organisationseinheit in der die Stelle eingegliedert ist",
+          "example": "11 Personal"
+        },
+        "vorgesetzte_Stelle": {
+          "type": "string",
+          "description": "Die Stelle, welche dieser Stelle vorgesetzt ist.",
+          "example": "10-00-BM"
+        },
+        "Link_zur_Stelle": {
+          "type": "string",
+          "description": "Link zur Einsicht der Stelle in Kasaia.",
+          "example": "https://next-gen.kasaia.de/kasaia/aktuell/Leseansicht.html?mandantenID=650c4744031097155e68db44&stellenID=650c4745926eca44ed15da59&versionsID=f706a894-5373-49b2-b3cc-572cd9e60728"
+        },
+        "Tarifbewertung": {
+          "$ref": "#/components/schemas/API_Tarifbewertung_DTO"
+        },
+        "Dienstpostenbewertung": {
+          "$ref": "#/components/schemas/API_Dienstpostenbewertung_DTO"
+        },
+        "Stelleninhaber": {
+          "$ref": "#/components/schemas/API_Stelleninhaber_DTO"
+        }
+      }
+    },
+    "API_Stelleninhaber_DTO": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "description": "Der Name des Stelleninhabers.",
+          "example": "Max Mustermann"
+        },
+        "Personalnummer": {
+          "type": "string",
+          "description": "Die Personalnummer des Stelleninhabers.",
+          "example": "444-001"
+        },
+        "ist_verbeamtet": {
+          "type": "boolean",
+          "description": "Ist der Stelleninhaber verbeamtet?",
+          "example": true
+        }
+      }
+    },
+    "API_Tarifbewertung_DTO": {
+      "type": "object",
+      "properties": {
+        "Entgeltgruppe": {
+          "type": "string",
+          "description": "Das Ergebnis der Tarifbewertung.",
+          "enum": [
+            "---",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "7a",
+            "8",
+            "9",
+            "9a",
+            "9b",
+            "9c",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "S 2",
+            "S 3",
+            "S 4",
+            "S 7",
+            "S 8a",
+            "S 8b",
+            "S 9",
+            "S 11a",
+            "S 11b",
+            "S 12",
+            "S 13",
+            "S 14",
+            "S 15",
+            "S 16",
+            "S 17",
+            "S 18",
+            "P 5",
+            "P 6",
+            "P 7",
+            "P 8",
+            "N",
+            "P 9",
+            "P 10",
+            "P 11",
+            "P 12",
+            "P 13",
+            "P 14",
+            "P 15",
+            "P 16",
+            "KR 5",
+            "KR 6",
+            "KR 7",
+            "KR 8",
+            "KR 9",
+            "KR 10",
+            "KR 11",
+            "KR 12",
+            "KR 13",
+            "KR 14",
+            "KR 15",
+            "KR 16",
+            "KR 14"
+          ],
+          "example": "12"
+        },
+        "Fallgruppe": {
+          "type": "string",
+          "description": "Die Fallgruppe des Ergebnises, falls eine vorliegt.",
+          "example": "1"
+        },
+        "Gültig_ab": {
+          "type": "string",
+          "description": "Das Datum, ab wann die Tarifbewertung gültig ist. Gültig ab ist ein optionales Feld ohne feste Formatierung",
+          "example": "23.09.2025 oder Januar"
+        },
+        "Abschnitt": {
+          "type": "string",
+          "description": "Der Tarifvertragsabschnitt, nach dem die Stelle bewertet wurde. Der Abschnitt wird von Kasaia ermittelt, allerdings gibt es nicht für jede Bewertung einen Abschnitt.",
+          "example": "Teil A Abschnitt I Ziffer 1/3"
+        },
+        "Abschnittsbezeichnung": {
+          "type": "string",
+          "description": "Die Bezeichnung des Tarifvertragsabschnitts, nach dem die Stelle bewertet wurde.",
+          "example": "Entgeltgruppen 1 bis 12"
+        },
+        "ze_Abschnittsbezeichnung": {
+          "type": "string",
+          "enum": [
+            "VKA_Teil_A_I_1",
+            "VKA_Teil_A_I_2",
+            "VKA_Teil_A_I_3",
+            "VKA_Teil_A_I_4",
+            "VKA_Teil_A_II_1",
+            "VKA_Teil_A_II_2",
+            "VKA_Teil_A_II_3",
+            "VKA_Teil_A_II_4",
+            "VKA_Teil_A_II_5",
+            "VKA_Teil_A_II_6",
+            "VKA_Teil_B_I",
+            "VKA_Teil_B_II",
+            "VKA_Teil_B_III",
+            "VKA_Teil_B_IV",
+            "VKA_Teil_B_VI",
+            "VKA_Teil_B_VII",
+            "VKA_Teil_B_VIII",
+            "VKA_Teil_B_X",
+            "VKA_Teil_B_XI_1",
+            "VKA_Teil_B_XI_2",
+            "VKA_Teil_B_XI_3",
+            "VKA_Teil_B_XI_5",
+            "VKA_Teil_B_XI_6",
+            "VKA_Teil_B_XI_7",
+            "VKA_Teil_B_XI_8",
+            "VKA_Teil_B_XI_9",
+            "VKA_Teil_B_XI_10",
+            "VKA_Teil_B_XI_13",
+            "VKA_Teil_B_XI_15",
+            "VKA_Teil_B_XI_16",
+            "VKA_Teil_B_XI_18",
+            "VKA_Teil_B_XI_19",
+            "VKA_Teil_B_XI_20",
+            "VKA_Teil_B_XI_21",
+            "VKA_Teil_B_XII",
+            "VKA_Teil_B_XIII",
+            "VKA_Teil_B_XIV_1",
+            "VKA_Teil_B_XV",
+            "VKA_Teil_B_XVI",
+            "VKA_Teil_B_XVII",
+            "VKA_Teil_B_XVIII",
+            "VKA_Teil_B_XIX",
+            "VKA_Teil_B_XX",
+            "VKA_Teil_B_XXI",
+            "VKA_Teil_B_XXII_1",
+            "VKA_Teil_B_XXII_2",
+            "VKA_Teil_B_XXIII",
+            "VKA_Teil_B_XXIV",
+            "VKA_Teil_B_XXVI",
+            "VKA_Teil_B_XXVII",
+            "VKA_Teil_B_XXVIII",
+            "VKA_Teil_B_XXIX",
+            "VKA_Teil_B_XXX",
+            "VKA_Teil_B_XXXI",
+            "VKA_Teil_B_XXXII",
+            "TVL_Teil_I",
+            "TVL_Teil_II_2_1",
+            "TVL_Teil_II_2_2",
+            "TVL_Teil_II_2_3",
+            "TVL_Teil_II_2_4",
+            "TVL_Teil_II_3",
+            "TVL_Teil_II_4",
+            "TVL_Teil_II_5_1",
+            "TVL_Teil_II_5_2",
+            "TVL_Teil_II_6",
+            "TVL_Teil_II_8_1",
+            "TVL_Teil_II_8_2",
+            "TVL_Teil_II_8_3",
+            "TVL_Teil_II_9_1",
+            "TVL_Teil_II_9_2",
+            "TVL_Teil_II_9_3",
+            "TVL_Teil_II_10_1",
+            "TVL_Teil_II_10_2",
+            "TVL_Teil_II_10_3",
+            "TVL_Teil_II_10_4",
+            "TVL_Teil_II_10_5",
+            "TVL_Teil_II_10_6",
+            "TVL_Teil_II_10_7",
+            "TVL_Teil_II_10_8",
+            "TVL_Teil_II_10_9",
+            "TVL_Teil_II_10_10",
+            "TVL_Teil_II_10_11",
+            "TVL_Teil_II_10_12",
+            "TVL_Teil_II_10_13",
+            "TVL_Teil_II_10_14",
+            "TVL_Teil_II_10_15",
+            "TVL_Teil_II_11",
+            "TVL_Teil_II_11_1",
+            "TVL_Teil_II_11_2",
+            "TVL_Teil_II_11_3",
+            "TVL_Teil_II_11_4",
+            "TVL_Teil_II_11_5",
+            "TVL_Teil_II_12_1",
+            "TVL_Teil_II_12_2",
+            "TVL_Teil_II_13",
+            "TVL_Teil_II_14",
+            "TVL_Teil_II_15_1",
+            "TVL_Teil_II_15_2",
+            "TVL_Teil_II_15_3",
+            "TVL_Teil_II_15_4",
+            "TVL_Teil_II_15_5",
+            "TVL_Teil_II_16",
+            "TVL_Teil_II_17",
+            "TVL_Teil_II_18_1",
+            "TVL_Teil_II_18_2",
+            "TVL_Teil_II_18_3",
+            "TVL_Teil_II_19",
+            "TVL_Teil_II_20_1",
+            "TVL_Teil_II_20_2",
+            "TVL_Teil_II_20_3",
+            "TVL_Teil_II_20_4",
+            "TVL_Teil_II_20_5",
+            "TVL_Teil_II_20_6",
+            "TVL_Teil_II_21",
+            "TVL_Teil_II_22_1",
+            "TVL_Teil_II_22_2",
+            "TVL_Teil_II_22_3",
+            "TVL_Teil_II_22_4",
+            "TVL_Teil_II_22_5",
+            "TVL_Teil_II_22_6",
+            "TVL_Teil_II_22_7"
+          ],
+          "writeOnly": true
+        }
+      }
+    },
+    "API_Stelle_DTO": {
+      "type": "object",
+      "properties": {
+        "Stellen_ID": {
+          "type": "string",
+          "description": "Eindeutige UUID. Diese ID wird verwendet, um eine Stelle eindeutig zu identifizieren. Diese ID wird z.B. benötigt, um ein PDF über die Public-API erzeugen zu können.",
+          "example": "650c4745926eca44ed15da59"
+        },
+        "Stellennummer": {
+          "type": "string",
+          "description": "Die Stellennummer der Stelle.",
+          "example": "10-01-AL"
+        },
+        "Bezeichnung": {
+          "type": "string",
+          "description": "Bezeichnung der Stelle.",
+          "example": "AL Hauptamtsleitung"
+        },
+        "Festlegungsdatum": {
+          "type": "string",
+          "format": "date-time",
+          "description": "An dem Festlegungsdatum wurde die Endfassung für die Stelle festgelegt.\\\nFormatierung in ISO-8601-Format (UTC) - **yyyy-MM-dd'T'HH:mm:ss.SSSX**\n",
+          "example": "2025-07-06T08:12:45.321Z"
+        }
+      }
+    },
+    "API_Exportprofil_DTO": {
+      "type": "object",
+      "properties": {
+        "Exportprofil_ID": {
+          "type": "string",
+          "description": "Eindeutige UUID. Diese ID wird verwendet, um ein Exportprofil eindeutig zu identifizieren. Diese ID wird benötigt, um ein PDF über die public API erzeugen zu können.",
+          "example": "650c4745926eca44ed15dadb"
+        },
+        "Bezeichnung": {
+          "type": "string",
+          "description": "Bezeichnung des Exportprofils.",
+          "example": "Vollständiges Tarifbewertungsgutachten"
+        },
+        "Dokumenttyp": {
+          "type": "string",
+          "description": "Der Dokumenttyp legt fest welche Dokumentinhalte ausgewertet werden.",
+          "enum": [
+            "Stellenbeschreibung",
+            "Tarifbewertung",
+            "Dienstpostenbewertung"
+          ],
+          "example": "Tarifbewertung"
+        }
+      }
+    }
+  },
+  "securitySchemes": {
+    "X-Api-Key": {
+      "type": "apiKey",
+      "description": "Jeder Zugriff auf die Kasaia Public-API erfordert einen API-Key.\n- Der API-Key identifiziert Ihren Mandanten.\n- Er legt fest, welche Berechtigungen (Lesen, Schreiben) für den Zugriff verfügbar sind.\n- Ohne API-Key sind Aufrufe nicht möglich.\n\nTragen Sie hier den **API-Key Ihres Kasaia-Mandanten** (API-Key-Beispiel: 68f21031a53646a85ef1cfed.SZ6Z6SPRC5MZRDNAP3MFF5JAB5) ein.\nDiesen können Sie in der Administration unter **„API-Schlüssel“** erstellen. Für den Zugriff ist ein Administrator- oder technischer Administrator-Login erforderlich.",
+      "name": "X-Api-Key",
+      "in": "header"
+    }
+  }
+}

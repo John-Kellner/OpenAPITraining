@@ -14,3 +14,27 @@ lOGIN
   "password": "password1234"
 }'
 ```
+
+
+Openapi Generator 
+
+```
+npm install @openapitools/openapi-generator-cli -g
+```
+
+
+```
+openapi-generator-cli version-manager set 7.19.0
+```
+
+```
+npm install @openapitools/openapi-generator-cli -D
+```
+```
+npx @openapitools/openapi-generator-cli generate -i StellenbewertungAuth.yaml -g ruby -o /tmp/test/
+```
+
+Auflistung von Sprachen
+```
+npx @openapitools/openapi-generator-cli list
+```
