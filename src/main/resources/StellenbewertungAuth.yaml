@@ -1,0 +1,229 @@
+openapi: 3.1.0
+info:
+  title: Stellenbewertung
+  description: Stellenbewertung intern
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:4010'
+  - url: 'https://api-stellenbewertung.org'
+  - url: 'http://dev/stage'
+  - url: 'http://prod/production'
+  - url: 'http://localhost:8080'
+paths:
+  /person:
+    get:
+      summary: Get Personal Data via ID
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 'Die eindeutige ID'
+          schema:
+            type: integer
+            format: int64
+      responses:
+        200:
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDTO'
+  /orgData:
+    post:
+      summary: Post Organization Data
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrgDataDTO'
+      responses:
+        200:
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgDataDTO'
+        500:
+          description: 'Aufruf nicht korrekt'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageDTO'
+    delete:
+      summary: Löschen von Org.Daten
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 362
+      responses:
+        200:
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgDataDTO'
+    put:
+      summary: Update OrgData
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrgDataDTO'
+      responses:
+        200:
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgDataDTO'
+    patch:
+      summary: Teil-Update OrgData
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                OrgID:
+                  type: string
+                  example: 'IT321'
+                abteilung:
+                  type: string
+                  example: 'IT'
+              required:
+                - abteilung
+      responses:
+        200:
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgDataDTO'
+    options:
+      summary: Prüft erlaubte HTTP-Methoden für diesen Endpunkt
+      security:
+        - bearerAuth: [ ]
+      description: Gibt die unterstützten HTTP-Verben im 'Allow'-Header zurück.
+      responses:
+        '204':
+          description: Erfolgreiche Abfrage (No Content)
+          headers:
+            Allow:
+              description: Liste der erlaubten Methoden
+              schema:
+                type: string
+                example: "GET, PUT, DELETE, OPTIONS"
+            Access-Control-Allow-Methods:
+              description: Erlaubte Methoden für CORS-Anfragen
+              schema:
+                type: string
+                example: "GET, PUT, DELETE"
+    trace:
+      summary: Diagnosetest (Echo)
+      security:
+        - bearerAuth: [ ]
+      description: Spiegelt die empfangene Anfrage zurück, um Header-Änderungen durch Proxies zu prüfen.
+      responses:
+        '200':
+          description: Echo der Anfrage
+          content:
+            message/http: # Spezieller Content-Type für TRACE
+              schema:
+                type: string
+                example: |
+                  TRACE /person/123 HTTP/1.1
+                  Host: api.stellenbewertung.de
+                  User-Agent: Mozilla/5.0
+                  X-Forwarded-For: 192.168.1.1
+  /login:
+    post:
+      summary: Authentifizierung eines Users der einen Token zurückgibt
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username: {
+                  type: string
+                }
+                password: {
+                  type: string,
+                  format: password,
+                  example: '$%43rf4r43dewe678563'
+                }
+      responses:
+        '200':
+          description: Login erfolgreich
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: {type: string}
+components:
+  schemas:
+    PersonDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 362
+        vorname:
+          type: string
+          example: 'Selma'
+        nachname:
+          type: string
+          example: 'Sahin'
+        abteilungsID:
+          type: string
+          example: 'IT321'
+      required:
+        - vorname
+        - nachname
+    OrgDataDTO:
+      type: object
+      properties:
+        OrgID:
+          type: string
+          example: 'IT321'
+        abteilung:
+          type: string
+          example: 'IT'
+        einheit:
+          type: string
+          example: '321'
+        text:
+          type: string
+          example: 'SAP-Kommunikation'
+      required:
+        - OrgID
+        - abteilung
+        - einheit
+    MessageDTO:
+      type: object
+      properties:
+        title:
+          type: string
+          example: 'Aufruf fehlerhaft'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

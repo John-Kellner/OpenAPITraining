@@ -1,0 +1,95 @@
+openapi: 3.1.0
+info:
+  title: Stellenbewertung
+  description: Stellenbewertung intern
+  version: 1.0.0
+servers:
+  - url: 'https://api-stellenbewertung.org'
+  - url: 'http://dev/stage'
+  - url: 'http://prod/production'
+  - url: 'http://localhost:8080'
+  - url: 'http://localhost:4010'
+paths:
+  /person:
+    get:
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 'Person ID'
+          schema:
+            type: integer
+            format: int64
+      summary: Get Personal Data via ID
+      responses:
+        200:
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDTO'
+  /orgData:
+    post:
+      summary: Post Organization Data
+      responses:
+        200:
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgDataDTO'
+        500:
+          description: 'Aufruf nicht korrekt'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageDTO'
+components:
+  schemas:
+    PersonDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 362
+        vorname:
+          type: string
+          example: 'Selma'
+        nachname:
+          type: string
+          example: 'Sahin'
+        abteilungsID:
+          type: string
+          example: 'IT321'
+      required:
+        - vorname
+        - nachname
+    OrgDataDTO:
+      type: object
+      properties:
+        OrgID:
+          type: string
+          example: 'IT321'
+        abteilung:
+          type: string
+          example: 'IT'
+        einheit:
+          type: string
+          example: '321'
+        text:
+          type: string
+          example: 'SAP-Kommunikation'
+      required:
+        - OrgID
+        - abteilung
+        - einheit
+    MessageDTO:
+      type: object
+      properties:
+        title:
+          type: string
+          example: 'Aufruf fehlerhaft'
+        message:
+          type: string
+          example: 'BackendFehler falscher request Parameter 569'
